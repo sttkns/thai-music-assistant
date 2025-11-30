@@ -1,0 +1,11 @@
+uvicorn
+fastapi
+pydantic<2
+langgraph<1.0.0
+langchain<1.0.0
+langchain-core
+langchain-chroma
+langchain-openai
+langchain-google-genai>=3.1.0
+langchain-anthropic
+langchain-deepseek
