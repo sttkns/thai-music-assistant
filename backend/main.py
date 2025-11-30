@@ -1,7 +1,3 @@
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-
 import os
 from langchain.tools.retriever import create_retriever_tool
 from langgraph.prebuilt import create_react_agent
