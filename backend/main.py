@@ -1,6 +1,6 @@
 import os
-from langchain.tools.retriever import create_retriever_tool
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
+from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_chroma import Chroma
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -46,11 +46,14 @@ example_vectorstore = Chroma(
         collection_name=example_collection_name
     )
 example_retriever = example_vectorstore.as_retriever()
-example_rag = create_retriever_tool(
-    example_retriever,
-    "example_rag",
-    "Searches and returns traditional Thai songs in ABC notation, their motives, and their metadata from the database.",
-)
+
+@tool
+def example_rag(query):
+    """Searches and returns traditional Thai songs in ABC notation, their motives, and their metadata from the database."""
+    if not isinstance(query, str):
+        query = str(query)
+    docs = example_retriever.invoke(query)
+    return "\n\n".join(d.page_content for d in docs)
 
 theory_persist_directory = os.path.join(path, "data", "theories")
 theory_collection_name = "theories"
@@ -60,11 +63,14 @@ theory_vectorstore = Chroma(
         collection_name=theory_collection_name
     )
 theory_retriever = theory_vectorstore.as_retriever()
-theory_rag = create_retriever_tool(
-    theory_retriever,
-    "theory_rag",
-    "Searches and returns the knowledge of traditional Thai music theories from the database.",
-)
+
+@tool
+def theory_rag(query):
+    """Searches and returns the knowledge of traditional Thai music theories from the database."""
+    if not isinstance(query, str):
+        query = str(query)
+    docs = theory_retriever.invoke(query)
+    return "\n\n".join(d.page_content for d in docs)
 
 
 def system_prompt():
@@ -282,13 +288,13 @@ def system_prompt():
 
 def setup_model(mode, model):
     if model == "gpt-5-mini":
-        agent_model = "openai:gpt-5-mini"
+        agent_model = ChatOpenAI(model="gpt-5-mini")
     elif model == "gpt-5":
-        agent_model = "openai:gpt-5"
+        agent_model = ChatOpenAI(model="gpt-5")
     elif model == "gpt-4.1-mini":
-        agent_model = "openai:gpt-4.1-mini"
+        agent_model = ChatOpenAI(model="gpt-4.1-mini")
     elif model == "gpt-4.1":
-        agent_model = "openai:gpt-4.1"
+        agent_model = ChatOpenAI(model="gpt-4.1")
     elif model == "gemini-3-pro":
         agent_model = ChatGoogleGenerativeAI(model="gemini-3-pro-preview", thinking_budget=1024, include_thoughts=True,)
     elif model == "gemini-2.5-flash":
@@ -303,22 +309,26 @@ def setup_model(mode, model):
         agent_model = ChatAnthropic(model="claude-opus-4-5-20251101",)
     elif model == "deepseek":
         agent_model = ChatDeepSeek(model="deepseek-chat",)
+    else:
+        raise ValueError(f"Unknown model: {model}")
 
     chat_system_prompt, composer_system_prompt = system_prompt()
     if mode == "chat":
-        agent = create_react_agent(
+        agent = create_agent(
             model=agent_model,
             tools=[theory_rag],
-            prompt=(chat_system_prompt),
+            system_prompt=(chat_system_prompt),
             name="chat_agent",
         )
     elif mode == "compose":
-        agent = create_react_agent(
+        agent = create_agent(
             model=agent_model,
             tools=[example_rag, theory_rag],
-            prompt=(composer_system_prompt),
+            system_prompt=(composer_system_prompt),
             name="composer_agent",
         )
+    else:
+        raise ValueError(f"Invalid mode: {mode}")
     return agent
 
 def chat(agent, chat_history):
@@ -330,7 +340,6 @@ def chat(agent, chat_history):
         return last_message.content
 
 def parse_song(message):
-    print(message)
     error = "I apologize, but I encountered an error generating the song. Please try again."
     try:
         start_index = message.find("X:")
