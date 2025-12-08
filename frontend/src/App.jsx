@@ -27,11 +27,37 @@ const extractABCData = (abcString) => {
 
 const downloadMIDI = (abcString, title) => {
   if (!window.ABCJS) return;
-  // Use abcjs to generate a MIDI file buffer
-  const midiBuffer = window.ABCJS.synth.getMidiFile(abcString, { midiOutputType: 'binary' });
-  const blob = new Blob([midiBuffer], { type: 'audio/midi' });
-  const url = window.URL.createObjectURL(blob);
+
+  // Get the raw data
+  let midiResult = window.ABCJS.synth.getMidiFile(abcString, { midiOutputType: 'binary' });
   
+  // Unwrap if it's an array of files (e.g. [{...}]) rather than bytes
+  if (Array.isArray(midiResult) && midiResult.length > 0 && typeof midiResult[0] !== 'number') {
+    midiResult = midiResult[0];
+  }
+  
+  // Convert the data to a Uint8Array (Byte Array)
+  let bytes;
+  if (typeof midiResult === 'string') {
+    // If it's a binary string, convert each character to a byte
+    const len = midiResult.length;
+    bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = midiResult.charCodeAt(i);
+    }
+  } else if (midiResult instanceof Uint8Array || Array.isArray(midiResult)) {
+    // If it's already an array or Uint8Array, ensure it's a Uint8Array
+    bytes = new Uint8Array(midiResult);
+  } else {
+    console.error("Download failed: Unknown MIDI data format returned by ABCJS");
+    return;
+  }
+
+  // Create the Blob from the byte array
+  const blob = new Blob([bytes], { type: 'audio/midi' });
+
+  // Trigger the download
+  const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = `${title.replace(/\s+/g, '_')}.mid`;
