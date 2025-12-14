@@ -420,34 +420,30 @@ const TRANSLATIONS = {
 
 const AVAILABLE_MODELS = [
   { 
-    provider: 'OpenAI',
-    models: [
-      { id: 'gpt-5-mini', name: 'GPT-5 Mini' },
-      { id: 'gpt-5', name: 'GPT-5' },
-      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini' },
-      { id: 'gpt-4.1', name: 'GPT-4.1' },
-    ]
-  },
-  { 
     provider: 'Google',
     models: [
       { id: 'gemini-3-pro', name: 'Gemini 3 Pro' },
       { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
-      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
     ]
   },
   { 
     provider: 'Anthropic',
     models: [
-      { id: 'claude-haiku-4.5', name: 'Claude 4.5 Haiku' },
-      { id: 'claude-sonnet-4.5', name: 'Claude 4.5 Sonnet' },
       { id: 'claude-opus-4.5', name: 'Claude 4.5 Opus' },
+      { id: 'claude-haiku-4.5', name: 'Claude 4.5 Haiku' },
     ]
   },
   { 
-    provider: 'Other',
+    provider: 'DeepSeek',
     models: [
-      { id: 'deepseek', name: 'DeepSeek-V3' },
+      { id: 'deepseek', name: 'DeepSeek-V3.2' },
+    ]
+  },
+  { 
+    provider: 'OpenAI',
+    models: [
+      { id: 'gpt-5-mini', name: 'GPT-5 Mini' },
+      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini' },
     ]
   }
 ];
@@ -1035,10 +1031,11 @@ const PromptAssistantModal = ({ isOpen, onClose, onConfirm, isDarkMode, lang }) 
 export default function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
   // Settings State
-  const [selectedModel, setSelectedModel] = useState('gpt-5-mini');
-  const [conversationMode, setConversationMode] = useState('chat');
+  const [selectedModel, setSelectedModel] = useState('gemini-3-pro');
+  const [conversationMode, setConversationMode] = useState('compose');
   const [isDarkMode, setIsDarkMode] = useState(false);
   
   // New States
@@ -1058,6 +1055,17 @@ export default function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    handleResize();
+  }, []);
 
   const handleSend = async (e) => {
     if (e) e.preventDefault();
@@ -1086,7 +1094,7 @@ export default function App() {
       
       const allModels = AVAILABLE_MODELS.flatMap(g => g.models);
       const selectedModelObj = allModels.find(m => m.id === selectedModel);
-      const modelName = selectedModelObj ? selectedModelObj.id : "gpt-5-mini";
+      const modelName = selectedModelObj ? selectedModelObj.id : "gemini-3-pro";
 
       // 3. Fetch from Backend
       const response = await fetch(BACKEND_URL, {
@@ -1161,16 +1169,29 @@ export default function App() {
         lang={language}
       />
 
-      {/* Sidebar (Desktop only) */}
+      {/* Sidebar */}
       <div className={`hidden md:flex w-80 flex-col border-r shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 ${sidebarBg}`}>
+        {/* Sidebar Header */}
         <div className={`px-4 py-6 border-b ${headerBorder}`}>
-          <div className="flex items-center gap-3">
-             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-gradient-to-br from-teal-600 to-emerald-700 shadow-lg shadow-teal-900/50' : 'bg-gradient-to-br from-teal-500 to-emerald-600 shadow-lg shadow-teal-200/50'}`}>
-                <Music size={16} className="text-white" />
-             </div>
-             <h1 className={`font-bold text-lg tracking-tight whitespace-nowrap overflow-hidden text-ellipsis ${textPrimary}`}>
-               Thai Music Assistant
-             </h1>
+          <div className="flex items-center justify-between">
+            {/* Logo Section */}
+            <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-gradient-to-br from-teal-600 to-emerald-700 shadow-lg shadow-teal-900/50' : 'bg-gradient-to-br from-teal-500 to-emerald-600 shadow-lg shadow-teal-200/50'}`}>
+                  <Music size={16} className="text-white" />
+                </div>
+                <h1 className={`font-bold text-lg tracking-tight whitespace-nowrap overflow-hidden text-ellipsis ${textPrimary}`}>
+                  Thai Music
+                </h1>
+            </div>
+            {/* Close/Collapse Button inside Sidebar */}
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+              title="Close Sidebar"
+            >
+              <X size={20} className="md:hidden" />
+              <ChevronLeft size={20} className="hidden md:block" />
+            </button>
           </div>
         </div>
         
@@ -1184,17 +1205,6 @@ export default function App() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button 
-                onClick={() => setConversationMode('chat')}
-                className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
-                  conversationMode === 'chat' 
-                    ? isDarkMode ? 'bg-slate-800 border-teal-500 text-teal-300 shadow-sm' : 'bg-teal-50 border-teal-300 text-teal-900 shadow-sm' 
-                    : isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-500 hover:bg-slate-800' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                <MessageSquare size={18} className="mb-1" />
-                <span className="text-xs font-semibold">{t.chat}</span>
-              </button>
-              <button 
                 onClick={() => setConversationMode('compose')}
                 className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
                   conversationMode === 'compose' 
@@ -1204,6 +1214,17 @@ export default function App() {
               >
                 <PenTool size={18} className="mb-1" />
                 <span className="text-xs font-semibold">{t.compose}</span>
+              </button>
+              <button 
+                onClick={() => setConversationMode('chat')}
+                className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
+                  conversationMode === 'chat' 
+                    ? isDarkMode ? 'bg-slate-800 border-teal-500 text-teal-300 shadow-sm' : 'bg-teal-50 border-teal-300 text-teal-900 shadow-sm' 
+                    : isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-500 hover:bg-slate-800' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <MessageSquare size={18} className="mb-1" />
+                <span className="text-xs font-semibold">{t.chat}</span>
               </button>
             </div>
           </div>
@@ -1258,14 +1279,24 @@ export default function App() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Mobile Header */}
-        <div className={`md:hidden p-4 border-b flex items-center gap-3 sticky top-0 z-10 shadow-sm ${sidebarBg} ${headerBorder}`}>
-           <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDarkMode ? 'bg-gradient-to-br from-teal-600 to-emerald-700' : 'bg-gradient-to-br from-teal-500 to-emerald-600'}`}>
-              <Music className="text-white" size={16} />
-            </div>
-            <div className="flex flex-col justify-center overflow-hidden">
-              <h1 className={`font-bold text-lg tracking-tight whitespace-nowrap overflow-hidden text-ellipsis ${textPrimary}`}>Thai Music Assistant</h1>
-            </div>
+        {/* Main Header */}
+        <div className={`p-4 border-b flex items-center justify-between ${headerBorder} ${isDarkMode ? 'bg-slate-900' : 'bg-white'}`}>
+          <div className="flex items-center gap-3">
+            {/* Button logic: Hide on desktop if sidebar is already open */}
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'} 
+                ${isSidebarOpen ? 'md:hidden' : ''} 
+              `}
+              title="Open Sidebar"
+            >
+              <Menu size={24} />
+            </button>
+            {/* Title logic: Show here only if sidebar is closed (or on mobile) */}
+            {(!isSidebarOpen || window.innerWidth < 768) && (
+              <span className="font-bold text-lg">Thai Music Assistant</span>
+            )}
+          </div>
         </div>
 
         {/* Chat Stream */}
