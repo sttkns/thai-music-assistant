@@ -3,7 +3,7 @@ import {
   Send, Music, Play, Pause, Download, 
   Maximize2, X, 
   FileMusic, Sparkles, MessageSquare, Settings, PenTool,
-  ChevronDown, Moon, Sun, Cpu
+  ChevronDown, ChevronLeft, Menu, Moon, Sun, Cpu
 } from 'lucide-react';
 
 // --- CONFIGURATION ---
