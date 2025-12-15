@@ -381,6 +381,7 @@ const TRANSLATIONS = {
     selected: 'Selected',
     remove: 'Remove',
     noTagsSelected: 'No keywords selected',
+    serverError: 'Sorry, I encountered an error connecting to the server. Please try again.',
   },
   TH: {
     title: 'Thai Music Assistant',
@@ -413,6 +414,7 @@ const TRANSLATIONS = {
     selected: 'เลือกแล้ว',
     remove: 'ลบ',
     noTagsSelected: 'ยังไม่ได้เลือกคำสำคัญ',
+    serverError: 'ขออภัย เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์ โปรดลองใหม่อีกครั้ง',
   }
 };
 
@@ -607,7 +609,7 @@ const SheetMusic = ({ abcString, title, musicKey, tempo, uniqueId, isDarkMode, l
   const hoverBg = isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-50';
 
   return (
-    <div className={`relative mt-4 rounded-2xl border shadow-sm hover:shadow-md transition-all duration-300 overflow-visible w-full max-w-xl ${cardBg}`}>
+    <div className={`relative mt-4 rounded-2xl border shadow-sm hover:shadow-md transition-all duration-300 overflow-visible w-full max-w-4xl ${cardBg}`}>
       <div className={`px-4 py-3 border-b flex items-center justify-between rounded-t-2xl ${headerBg}`}>
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${iconBg}`}>
@@ -1045,8 +1047,16 @@ export default function App() {
   // Initial State: Empty messages
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
+  
+  // Ref for Textarea Auto-resize
+  const textareaRef = useRef(null);
 
   const t = TRANSLATIONS[language];
+
+  // Set Document Title
+  useEffect(() => {
+    document.title = "Thai Music Assistant";
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1055,6 +1065,17 @@ export default function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  // Textarea Auto-Resize Effect
+  useEffect(() => {
+    if (textareaRef.current) {
+      // Reset height to auto to get correct scrollHeight for shrinking
+      textareaRef.current.style.height = 'auto';
+      // Set height to scrollHeight, capped at max-height logic if needed via CSS or logic
+      // Adding a small buffer or using min-height class ensures basic size
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, [input]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1081,6 +1102,11 @@ export default function App() {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
+    
+    // Reset textarea height after sending
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
 
     try {
       // 1. Prepare chat history in the format expected by backend
@@ -1136,7 +1162,7 @@ export default function App() {
       const errorMsg = {
         id: Date.now() + 1,
         role: 'ai',
-        content: "Sorry, I encountered an error connecting to the server. Please try again.",
+        content: t.serverError,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, errorMsg]);
@@ -1170,17 +1196,18 @@ export default function App() {
       />
 
       {/* Sidebar */}
-      <div className={`hidden md:flex w-80 flex-col border-r shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 ${sidebarBg}`}>
+      <div className={`${isSidebarOpen ? 'flex' : 'hidden'} w-80 flex-col border-r shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 ${sidebarBg}`}>
         {/* Sidebar Header */}
-        <div className={`px-4 py-6 border-b ${headerBorder}`}>
+        <div className={`p-4 border-b ${headerBorder}`}>
           <div className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-gradient-to-br from-teal-600 to-emerald-700 shadow-lg shadow-teal-900/50' : 'bg-gradient-to-br from-teal-500 to-emerald-600 shadow-lg shadow-teal-200/50'}`}>
-                  <Music size={16} className="text-white" />
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-gradient-to-br from-teal-600 to-emerald-700 shadow-lg shadow-teal-900/50' : 'bg-gradient-to-br from-teal-500 to-emerald-600 shadow-lg shadow-teal-200/50'}`}>
+                  <Music size={20} className="text-white" />
                 </div>
+                {/* Updated Title */}
                 <h1 className={`font-bold text-lg tracking-tight whitespace-nowrap overflow-hidden text-ellipsis ${textPrimary}`}>
-                  Thai Music
+                  Thai Music Assistant
                 </h1>
             </div>
             {/* Close/Collapse Button inside Sidebar */}
@@ -1189,8 +1216,7 @@ export default function App() {
               className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
               title="Close Sidebar"
             >
-              <X size={20} className="md:hidden" />
-              <ChevronLeft size={20} className="hidden md:block" />
+              <ChevronLeft size={20} />
             </button>
           </div>
         </div>
@@ -1244,7 +1270,7 @@ export default function App() {
         </div>
 
         {/* Footer Settings */}
-        <div className={`p-4 border-t space-y-3 ${headerBorder} ${isDarkMode ? '' : 'bg-white'}`}>
+        <div className={`p-4 border-t space-y-3 min-h-[140px] flex flex-col justify-center ${headerBorder} ${isDarkMode ? '' : 'bg-white'}`}>
            {/* Dark Mode Toggle */}
            <button 
              onClick={() => setIsDarkMode(!isDarkMode)}
@@ -1279,29 +1305,22 @@ export default function App() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Main Header */}
-        <div className={`p-4 border-b flex items-center justify-between ${headerBorder} ${isDarkMode ? 'bg-slate-900' : 'bg-white'}`}>
-          <div className="flex items-center gap-3">
-            {/* Button logic: Hide on desktop if sidebar is already open */}
-            <button 
-              onClick={() => setIsSidebarOpen(true)}
-              className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'} 
-                ${isSidebarOpen ? 'md:hidden' : ''} 
-              `}
-              title="Open Sidebar"
-            >
-              <Menu size={24} />
-            </button>
-            {/* Title logic: Show here only if sidebar is closed (or on mobile) */}
-            {(!isSidebarOpen || window.innerWidth < 768) && (
-              <span className="font-bold text-lg">Thai Music Assistant</span>
-            )}
+        {/* Removed Main Header and added floating menu button */}
+        {!isSidebarOpen && (
+          <div className="absolute top-4 left-4 z-10">
+             <button 
+               onClick={() => setIsSidebarOpen(true)}
+               className={`p-2 rounded-lg shadow-md transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200'}`}
+               title="Open Sidebar"
+             >
+               <Menu size={24} />
+             </button>
           </div>
-        </div>
+        )}
 
         {/* Chat Stream */}
         <div className={`flex-1 overflow-y-auto p-4 md:p-10 space-y-4 ${isDarkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
-          <div className="max-w-4xl mx-auto w-full min-h-[50vh] flex flex-col">
+          <div className="max-w-4xl mx-auto w-full min-h-[50vh] flex flex-col pt-8">
             {messages.length === 0 ? (
               // Empty State (Blank)
               null
@@ -1335,8 +1354,8 @@ export default function App() {
         </div>
 
         {/* Input Area */}
-        <div className={`border-t p-6 md:p-8 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] ${sidebarBg} ${headerBorder}`}>
-          <div className="max-w-4xl mx-auto w-full relative flex gap-3">
+        <div className={`border-t p-6 md:p-8 min-h-[140px] flex items-center shadow-[0_-4px_20px_rgba(0,0,0,0.02)] ${sidebarBg} ${headerBorder}`}>
+          <div className="max-w-4xl mx-auto w-full relative flex gap-3 items-end">
              
              {/* Prompt Assistant Button */}
              <div className="relative group">
@@ -1366,27 +1385,35 @@ export default function App() {
                 )}
              </div>
 
-            <form onSubmit={handleSend} className="flex-1 relative flex items-center gap-3">
-              <input
-                type="text"
+            <form onSubmit={handleSend} className="flex-1 relative flex items-end gap-3">
+              <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend(e);
+                  }
+                }}
+                rows={1}
                 placeholder={
                   conversationMode === 'compose' 
                     ? t.placeholderCompose 
                     : t.placeholderChat
                 }
-                className={`flex-1 text-base rounded-2xl block w-full p-4 pl-5 transition-all shadow-inner placeholder:text-slate-400 ${
+                className={`flex-1 text-base rounded-2xl block w-full p-4 pl-5 pr-16 transition-all shadow-inner placeholder:text-slate-400 resize-none custom-scrollbar ${
                   isDarkMode 
                   ? 'bg-slate-800 border-slate-700 text-slate-100 focus:ring-2 focus:ring-teal-500 focus:bg-slate-800' 
                   : 'bg-slate-50 border-slate-200 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white focus:border-teal-500'
                 }`}
+                style={{ minHeight: '56px', maxHeight: '200px' }}
               />
               
               <button 
                 type="submit" 
                 disabled={!input.trim() || isLoading}
-                className={`absolute right-3 p-2.5 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-lg ${
+                className={`absolute right-3 bottom-2 p-2.5 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-lg ${
                   isDarkMode 
                   ? 'bg-teal-600 hover:bg-teal-500 shadow-teal-900/30' 
                   : 'bg-teal-600 hover:bg-teal-700 shadow-teal-200'
