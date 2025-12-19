@@ -328,7 +328,7 @@ def setup_model(mode, model):
     if model == "gpt-5.2":
         agent_model = ChatOpenAI(model="gpt-5.2")
     elif model == "gpt-5.2-pro":
-        agent_model = ChatOpenAI(model="gpt-5.2-pro")
+        agent_model = ChatOpenAI(model="gpt-5.2-pro", output_version="responses/v1", timeout=120, max_retries=3,)
     elif model == "gpt-5-mini":
         agent_model = ChatOpenAI(model="gpt-5-mini")
     elif model == "gpt-4.1-mini":
