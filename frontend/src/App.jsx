@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 
 // --- CONFIGURATION ---
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL; 
+// const BACKEND_URL = import.meta.env.VITE_BACKEND_URL; 
+const BACKEND_URL = "http://localhost:3000"; 
 
 // --- HELPER: ABC PARSER & DOWNLOADER ---
 const extractABCData = (abcString) => {
@@ -444,6 +445,8 @@ const AVAILABLE_MODELS = [
   { 
     provider: 'OpenAI',
     models: [
+      { id: 'gpt-5.2-pro', name: 'GPT-5.2 Pro' },
+      { id: 'gpt-5.2', name: 'GPT-5.2' },
       { id: 'gpt-5-mini', name: 'GPT-5 Mini' },
       { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini' },
     ]
@@ -493,16 +496,16 @@ const SheetMusic = ({ abcString, title, musicKey, tempo, uniqueId, isDarkMode, l
     }
 
     if (abcjs && el) {
-      const renderParams = {
-        responsive: 'resize', 
+      const baseParams = {
         add_classes: true,
         paddingbottom: 30,
         paddingtop: 30,
         paddingright: 20,
         paddingleft: 20,
+        responsive: 'resize', // ALWAYS use responsive to wrap
       };
 
-      const visualObj = abcjs.renderAbc(el, abcString, renderParams);
+      const visualObj = abcjs.renderAbc(el, abcString, baseParams);
 
       if (abcjs.synth.supportsAudio()) {
         const synth = new abcjs.synth.CreateSynth();
@@ -609,7 +612,7 @@ const SheetMusic = ({ abcString, title, musicKey, tempo, uniqueId, isDarkMode, l
   const hoverBg = isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-50';
 
   return (
-    <div className={`relative mt-4 rounded-2xl border shadow-sm hover:shadow-md transition-all duration-300 overflow-visible w-full max-w-4xl ${cardBg}`}>
+    <div className={`relative mt-4 rounded-2xl border shadow-sm hover:shadow-md transition-all duration-300 w-full ${cardBg}`}>
       <div className={`px-4 py-3 border-b flex items-center justify-between rounded-t-2xl ${headerBg}`}>
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${iconBg}`}>
@@ -647,7 +650,7 @@ const SheetMusic = ({ abcString, title, musicKey, tempo, uniqueId, isDarkMode, l
         <div 
           key="inline-paper"
           ref={notationRef} 
-          className="w-full text-slate-900 overflow-x-auto" 
+          className="w-full text-slate-900" 
         ></div>
         {!abcjs && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/50">
@@ -686,15 +689,19 @@ const SheetMusic = ({ abcString, title, musicKey, tempo, uniqueId, isDarkMode, l
 
 const ChatMessage = ({ message, isDarkMode, lang }) => {
   const isUser = message.role === 'user';
+  const hasMusic = !!message.musicData;
   const userBubble = 'bg-teal-600 text-white';
   const aiBubble = isDarkMode 
     ? 'bg-slate-800 border border-slate-700 text-slate-200 shadow-sm' 
     : 'bg-white border border-slate-200 text-slate-700 shadow-sm';
   const aiAvatar = 'bg-gradient-to-br from-teal-500 to-emerald-600 text-white';
 
+  // Widen bubble if music is present
+  const bubbleMaxWidth = hasMusic ? 'max-w-full md:max-w-[95%]' : 'max-w-[95%] md:max-w-[85%]';
+
   return (
     <div className={`flex w-full mb-8 ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex max-w-[95%] md:max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'} gap-4`}>
+      <div className={`flex ${bubbleMaxWidth} ${isUser ? 'flex-row-reverse' : 'flex-row'} gap-4`}>
         {!isUser && (
           <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${aiAvatar}`}>
             <Music size={20} />
@@ -702,7 +709,7 @@ const ChatMessage = ({ message, isDarkMode, lang }) => {
         )}
 
         <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} flex-1 min-w-0`}>
-          <div className={`relative px-5 py-4 rounded-2xl text-sm leading-relaxed shadow-sm ${isUser ? `${userBubble} rounded-tr-none` : `${aiBubble} rounded-tl-none`}`}>
+          <div className={`relative px-5 py-4 rounded-2xl text-sm leading-relaxed shadow-sm w-full ${isUser ? `${userBubble} rounded-tr-none` : `${aiBubble} rounded-tl-none`}`}>
             {message.content && !message.musicData && <p className="whitespace-pre-wrap">{message.content}</p>}
             
             {message.musicData && (
@@ -877,10 +884,10 @@ const PromptAssistantModal = ({ isOpen, onClose, onConfirm, isDarkMode, lang }) 
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
           {/* Left Panel: Selection Area */}
-          <div className="flex-1 flex flex-col border-r overflow-hidden relative">
+          <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r overflow-hidden relative order-1">
             
             {/* Tabs */}
             <div className={`flex px-6 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
@@ -963,8 +970,8 @@ const PromptAssistantModal = ({ isOpen, onClose, onConfirm, isDarkMode, lang }) 
           </div>
 
           {/* Right Panel: Live Preview & Actions */}
-          <div className={`w-80 flex flex-col ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50/50'}`}>
-            <div className="flex-1 p-6 overflow-y-auto">
+          <div className={`w-full md:w-80 flex flex-col order-2 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50/50'}`}>
+            <div className="flex-1 p-6 overflow-y-auto max-h-[30vh] md:max-h-none">
                <div className="flex items-center justify-between mb-4">
                   <h3 className={`text-xs font-bold uppercase tracking-wider ${mutedText}`}>{t.selected} ({selectedTags.length})</h3>
                   {selectedTags.length > 0 && (
