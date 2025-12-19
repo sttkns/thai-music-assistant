@@ -7,8 +7,7 @@ import {
 } from 'lucide-react';
 
 // --- CONFIGURATION ---
-// const BACKEND_URL = import.meta.env.VITE_BACKEND_URL; 
-const BACKEND_URL = "http://localhost:3000"; 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL; 
 
 // --- HELPER: ABC PARSER & DOWNLOADER ---
 const extractABCData = (abcString) => {
