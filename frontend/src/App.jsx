@@ -386,7 +386,7 @@ const TRANSLATIONS = {
   TH: {
     title: 'Thai Music Assistant',
     conversationMode: 'โหมดการสนทนา',
-    chat: 'พูดคุย',
+    chat: 'ถาม-ตอบ',
     compose: 'ประพันธ์เพลง',
     generationModel: 'โมเดลปัญญาประดิษฐ์',
     darkMode: 'โหมดมืด',
@@ -1047,7 +1047,7 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   
   // New States
-  const [language, setLanguage] = useState('EN');
+  const [language, setLanguage] = useState('TH');
   const [isPromptAssistantOpen, setIsPromptAssistantOpen] = useState(false);
 
   // Initial State: Empty messages
