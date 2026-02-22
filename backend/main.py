@@ -345,7 +345,7 @@ def setup_model(mode, model):
     elif model == "deepseek":
         agent_model = ChatDeepSeek(model="deepseek-chat",)
     elif model == "glm-5":
-        agent_model = ChatOpenAI(model="glm-5", openai_api_key=ZAI_API_KEY, opeai_api_base="https://api.z.ai/api/paas/v4/")
+        agent_model = ChatOpenAI(model="glm-5", openai_api_key=ZAI_API_KEY, openai_api_base="https://api.z.ai/api/paas/v4/")
     else:
         raise ValueError(f"Unknown model: {model}")
 
