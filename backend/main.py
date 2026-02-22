@@ -20,6 +20,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+ZAI_API_KEY = os.getenv("ZAI_API_KEY")
 
 
 app = FastAPI()
@@ -343,6 +344,8 @@ def setup_model(mode, model):
         agent_model = ChatAnthropic(model="claude-opus-4-5-20251101",)
     elif model == "deepseek":
         agent_model = ChatDeepSeek(model="deepseek-chat",)
+    elif model == "glm-5":
+        agent_model = ChatOpenAI(model="glm-5", openai_api_key=ZAI_API_KEY, opeai_api_base="https://api.z.ai/api/paas/v4/")
     else:
         raise ValueError(f"Unknown model: {model}")
 

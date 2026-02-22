@@ -436,9 +436,9 @@ const AVAILABLE_MODELS = [
     ]
   },
   { 
-    provider: 'DeepSeek',
+    provider: 'Z.ai',
     models: [
-      { id: 'deepseek', name: 'DeepSeek-V3.2' },
+      { id: 'glm-5', name: 'GLM-5' },
     ]
   },
   { 
