@@ -22,11 +22,12 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 ZAI_API_KEY = os.getenv("ZAI_API_KEY")
 
+origins = os.environ.get("CORS_ORIGINS", "*")
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
