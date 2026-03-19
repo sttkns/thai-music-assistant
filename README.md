@@ -35,7 +35,7 @@ Workflow:
 4. LLM generates music in ABC notation.
 5. Output is parsed and converted to MIDI.
 
-[System Architecture](img/architecture.png)
+![System Architecture](img/architecture.png)
 
 ## Implementation
 
