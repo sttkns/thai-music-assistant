@@ -2,7 +2,9 @@
 
 A framework for generating traditional Thai music using LLMs and retrieval-augmented generation (RAG).
 
-Demo: [Link](http://72.61.117.10) (temporary deployment)
+## Demo
+- [https://tma.siammusiclab.com](https://tma.siammusiclab.com)
+- [https://thai-music-assistant.vercel.app](https://thai-music-assistant.vercel.app) (alternative deployment)
 
 ## Overview
 
@@ -36,6 +38,16 @@ Workflow:
 5. Output is parsed and converted to MIDI.
 
 ![System Architecture](img/architecture.png)
+
+## Deployment Overview
+
+The application is deployed as containerized services behind Traefik.
+
+- Frontend and backend are isolated in separate containers.
+- Traefik provides request routing and HTTPS handling.
+- Services communicate through a shared Docker network (`tma_default`) provided by the hosting environment.
+
+An alternative deployment using Vercel (frontend) and Render (backend) is also available.
 
 ## Implementation
 
